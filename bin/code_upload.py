@@ -21,6 +21,7 @@ parser = OptionParser(usage=usage)
 
 
 
+
 #配置文件
 conf = ConfigParser.ConfigParser()
 conf.read('../conf/upload.conf')
