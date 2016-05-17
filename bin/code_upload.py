@@ -11,7 +11,7 @@ import ConfigParser
 import logging
 from progressbar import *
 import os
-from multiprocessing import Process
+import threading
 
 
 #定义参数格式
@@ -50,11 +50,10 @@ for host_info in host_sections:
     env.passwords['%s@%s:%s'%(user,host,port)] = password
 
     if env.roledefs.has_key(role):
-        env.roledefs[role].append(host)
+        env.roledefs[role].append('%s@%s:%s' % (user, host, port))
     else:
         env.roledefs[role] = []
-        env.roledefs[role].append('%s@%s:%s'%(user,host,port))
-
+        env.roledefs[role].append('%s@%s:%s' % (user, host, port))
 
 
 
@@ -66,38 +65,34 @@ for host_info in host_sections:
 
 
 
-file_size = os.path.getsize('C:\Users\cnbjpuhui-384\Desktop\package\puhui-uc-server-restful.zip')
+file_size = os.path.getsize('C:\puhui-uc-server-restful.zip')
 
-print type(file_size)
+print file_size
+def puttask():
+    with settings(hide('everything')):
+        put('C:\puhui-uc-server-restful.zip','/home/xuning/a.zip')
+
+def get_size():
+    with settings(hide('everything')):
+        return run("ls -l /home/xuning/a.zip|awk '{print $5}'")
 
 
+def loading():
 
-
-
-
-#进度条
-@roles('webserver')
-def upload():
     widgets = [Bar('#'), ' ', 'Uploading:', Percentage(), ' ', ETA(), ' ', FileTransferSpeed()]
     pbar = ProgressBar(widgets=widgets, maxval=file_size)
-    print file_size
-
     pbar.start()
-    def put_process():
-        put('C:\Users\cnbjpuhui-384\Desktop\package\puhui-uc-server-restful.zip', '/home/xuning/a.zip')
-    p=Process(target = put_process)
-    p.start()
-    p.join()
     size = 0
-
-
     while size <= file_size:
-
-        time.sleep(1)
-        size = run("ls -l /home/xuning/a.zip|awk '{print $5}'")
-        print size
-        pbar.update(size)
-
-
+            size = get_size()
+            pbar.update(size)
+            time.sleep(0.5)
     pbar.finish()
-execute(upload)
+def execute_puttask():
+    execute(puttask)
+def execute_loading():
+    execute(loading)
+t1 = threading.Thread(target= execute_puttask)
+t2 = threading.Thread(target= execute_loading)
+t1.start()
+t2.start()
